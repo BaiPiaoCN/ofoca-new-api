@@ -68,27 +68,7 @@
 
     <div class="hero-glow"></div>
 
-    <nav class="fixed w-full z-50 top-0 border-b border-gray-800 bg-gray-950/80 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-cube text-blue-400 text-2xl"></i>
-                    <span class="font-bold text-xl tracking-tight">Ofoca AI</span>
-                </div>
-                <div class="hidden md:flex space-x-8">
-                    <a href="#features" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">核心特性</a>
-                    <a href="#models" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">支持模型</a>
-                    <a href="#integration" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">快速接入</a>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/login" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">登录</a>
-                    <a href="/register" class="text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-colors">免费注册</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <main class="pt-32 pb-16 sm:pt-40 sm:pb-24 lg:pb-32 overflow-hidden text-center px-4">
+    <main class="pt-16 pb-16 sm:pt-24 sm:pb-24 lg:pb-32 overflow-hidden text-center px-4">
         <div class="max-w-5xl mx-auto">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800/50 border border-gray-700 text-sm text-gray-300 mb-8">
                 <span class="flex h-2 w-2 rounded-full bg-green-500"></span>
@@ -105,7 +85,7 @@
                 <a href="/register" class="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2">
                     <i class="fa-solid fa-rocket"></i> 获取 API Key
                 </a>
-                <a href="#integration" class="w-full sm:w-auto px-8 py-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2">
+                <a href="https://coding.cnmnmsl.cloud/about" class="w-full sm:w-auto px-8 py-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2">
                     <i class="fa-solid fa-code"></i> 查看开发文档
                 </a>
             </div>
@@ -182,7 +162,7 @@
                 </div>
                 <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
                     <i class="fa-solid fa-brain text-purple-400"></i>
-                    <span class="font-medium">Claude 3 (Opus/Sonnet)</span>
+                    <span class="font-medium">Claude 3.5 (Sonnet/Opus)</span>
                 </div>
                 <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
                     <i class="fa-solid fa-sparkles text-blue-400"></i>
@@ -224,7 +204,7 @@
                     <pre class="text-sm font-mono leading-relaxed"><span class="text-pink-400">import</span> openai
 
 <span class="text-gray-500"># 1. 配置 Ofoca AI 的接口地址</span>
-openai.api_base = <span class="text-green-400">"https://api.ofoca.com/v1"</span>
+openai.api_base = <span class="text-green-400">"https://coding.cnmnmsl.cloud/v1"</span>
 
 <span class="text-gray-500"># 2. 填入在 Ofoca AI 后台生成的令牌 (Token)</span>
 openai.api_key = <span class="text-green-400">"sk-YourOfocaApiKeyHere..."</span>
