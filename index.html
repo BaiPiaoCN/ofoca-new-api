@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ofoca AI - 您的下一代大模型 API 聚合平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            850: '#1f2937',
+                            900: '#111827',
+                            950: '#030712',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030712;
+            color: #f3f4f6;
+            scroll-behavior: smooth;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(96, 165, 250, 0.15) 0%, rgba(3, 7, 18, 0) 70%);
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            border-color: #374151;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-blue-500 selection:text-white relative z-0">
+
+    <div class="hero-glow"></div>
+
+    <nav class="fixed w-full z-50 top-0 border-b border-gray-800 bg-gray-950/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-cube text-blue-400 text-2xl"></i>
+                    <span class="font-bold text-xl tracking-tight">Ofoca AI</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">核心特性</a>
+                    <a href="#models" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">支持模型</a>
+                    <a href="#integration" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">快速接入</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/login" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">登录</a>
+                    <a href="/register" class="text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-colors">免费注册</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-32 pb-16 sm:pt-40 sm:pb-24 lg:pb-32 overflow-hidden text-center px-4">
+        <div class="max-w-5xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800/50 border border-gray-700 text-sm text-gray-300 mb-8">
+                <span class="flex h-2 w-2 rounded-full bg-green-500"></span>
+                全面支持 New API 架构，服务运行稳定
+            </div>
+            <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8">
+                极速、稳定的 <br class="hidden sm:block">
+                <span class="gradient-text">大模型 API 聚合枢纽</span>
+            </h1>
+            <p class="mt-4 text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+                只需一个 API Key，即可无缝调用全球顶尖大语言模型。完美兼容 OpenAI 接口协议，为开发者提供高并发、低延迟的优质 AI 代理服务。
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                <a href="/register" class="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rocket"></i> 获取 API Key
+                </a>
+                <a href="#integration" class="w-full sm:w-auto px-8 py-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-code"></i> 查看开发文档
+                </a>
+            </div>
+            
+            <div class="mt-16 grid grid-cols-2 gap-8 md:grid-cols-4 border-t border-gray-800 pt-10">
+                <div>
+                    <div class="text-3xl font-bold text-white mb-1">99.9%</div>
+                    <div class="text-sm text-gray-400">SLA 保证</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-white mb-1">100+</div>
+                    <div class="text-sm text-gray-400">支持模型数量</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-white mb-1">&lt;50ms</div>
+                    <div class="text-sm text-gray-400">平均响应延迟</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-white mb-1">24/7</div>
+                    <div class="text-sm text-gray-400">技术支持</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <section id="features" class="py-20 bg-gray-900 border-y border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">为什么选择 Ofoca AI？</h2>
+                <p class="mt-4 text-lg text-gray-400">基于先进的 New API 系统构建，为您提供企业级的调用体验。</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 card-hover">
+                    <div class="w-12 h-12 bg-blue-900/50 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-bolt text-blue-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">极致并发与高可用</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        采用全球分布式节点部署，提供企业级的高并发承载能力。智能重试与多渠道负载均衡机制，确保您的每一次调用都稳定可靠。
+                    </p>
+                </div>
+                <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 card-hover">
+                    <div class="w-12 h-12 bg-purple-900/50 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-puzzle-piece text-purple-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">100% 协议兼容</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        完全兼容 OpenAI 原生接口格式。无论是 LangChain、AutoGPT 还是 NextChat 等各类主流 AI 应用，只需修改 Base URL 即可无缝零代码切换。
+                    </p>
+                </div>
+                <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 card-hover">
+                    <div class="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-chart-pie text-green-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">精准的日志与计费</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        内置强大的后台管理系统，提供详尽的请求日志分析与数据统计面板。Token 消耗一目了然，计费透明公开，杜绝任何隐形消费。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="models" class="py-20 bg-gray-950">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold tracking-tight text-white mb-4">一个接口，连接全部 AI 生态</h2>
+            <p class="text-lg text-gray-400 mb-12 max-w-2xl mx-auto">无需分别注册海外账号、绑定信用卡。Ofoca AI 已为您聚合市面上所有主流大语言模型，并持续更新中。</p>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
+                    <i class="fa-solid fa-robot text-gray-300"></i>
+                    <span class="font-medium">GPT-4o / GPT-4 Turbo</span>
+                </div>
+                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
+                    <i class="fa-solid fa-brain text-purple-400"></i>
+                    <span class="font-medium">Claude 3 (Opus/Sonnet)</span>
+                </div>
+                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
+                    <i class="fa-solid fa-sparkles text-blue-400"></i>
+                    <span class="font-medium">Gemini 1.5 Pro</span>
+                </div>
+                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
+                    <i class="fa-solid fa-feather text-teal-400"></i>
+                    <span class="font-medium">Llama 3</span>
+                </div>
+                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
+                    <i class="fa-solid fa-language text-orange-400"></i>
+                    <span class="font-medium">通义千问 / 智谱 GLM</span>
+                </div>
+                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
+                    <i class="fa-solid fa-palette text-pink-400"></i>
+                    <span class="font-medium">Midjourney / DALL·E 3</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="integration" class="py-20 bg-gray-900 border-t border-gray-800">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold tracking-tight text-white mb-4">简单两步，即刻接入</h2>
+                <p class="text-lg text-gray-400">替换官方的 Base URL，剩下的交给我们。</p>
+            </div>
+            
+            <div class="bg-[#1e1e1e] rounded-xl overflow-hidden border border-gray-700 shadow-2xl">
+                <div class="flex items-center px-4 py-3 bg-[#2d2d2d] border-b border-gray-700">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <div class="ml-4 text-sm text-gray-400 font-mono">Python 示例代码</div>
+                </div>
+                <div class="p-6 overflow-x-auto">
+                    <pre class="text-sm font-mono leading-relaxed"><span class="text-pink-400">import</span> openai
+
+<span class="text-gray-500"># 1. 配置 Ofoca AI 的接口地址</span>
+openai.api_base = <span class="text-green-400">"https://api.ofoca.com/v1"</span>
+
+<span class="text-gray-500"># 2. 填入在 Ofoca AI 后台生成的令牌 (Token)</span>
+openai.api_key = <span class="text-green-400">"sk-YourOfocaApiKeyHere..."</span>
+
+response = openai.ChatCompletion.create(
+    model=<span class="text-green-400">"gpt-4o"</span>,
+    messages=[
+        {<span class="text-green-400">"role"</span>: <span class="text-green-400">"user"</span>, <span class="text-green-400">"content"</span>: <span class="text-green-400">"你好，Ofoca AI！"</span>}
+    ]
+)
+
+<span class="text-pink-400">print</span>(response.choices[<span class="text-yellow-300">0</span>].message.content)</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-950 border-t border-gray-900 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center gap-2 mb-4 md:mb-0">
+                    <i class="fa-solid fa-cube text-blue-400 text-xl"></i>
+                    <span class="font-bold text-lg">Ofoca AI</span>
+                </div>
+                <div class="text-sm text-gray-500">
+                    &copy; 2026 Ofoca AI. All rights reserved. Powered by New API.
+                </div>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-500 hover:text-white transition-colors">
+                        <i class="fa-brands fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-white transition-colors">
+                        <i class="fa-brands fa-telegram text-xl"></i>
+                    </a>
+                    <a href="mailto:support@ofoca.com" class="text-gray-500 hover:text-white transition-colors">
+                        <i class="fa-solid fa-envelope text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
