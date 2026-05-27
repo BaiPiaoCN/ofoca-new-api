@@ -4,21 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ofoca AI - 编辑级精度的路由体验</title>
+    
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // 配置 Tailwind 以支持基于系统的深色模式
+      tailwind.config = {
+        darkMode: 'media',
+      }
+    </script>
     <!-- 引入 React 和 ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <!-- 引入 Babel 以在浏览器中编译 JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
 </head>
-<body>
+<body class="transition-colors duration-500">
+    <!-- 防白屏加载提示 (加入了深色判断防止夜间刺眼) -->
+    <div id="loader-container" style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'PingFang SC', sans-serif; transition: all 0.3s;">
+        <svg style="animation: spin 1s linear infinite; margin-bottom: 16px;" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        <p id="loader-title" style="font-size: 16px; font-weight: 500;">正在初始化引擎，请稍候...</p>
+        <p id="loader-desc" style="font-size: 13px; margin-top: 8px;">如果长时间停留，请检查网络连接</p>
+        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+    </div>
+    <script>
+        // 初始化加载画面的深浅色
+        const setLoaderTheme = () => {
+            const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.getElementById('loader-container').style.backgroundColor = isDark ? '#050505' : '#FAFAFA';
+            document.getElementById('loader-title').style.color = isDark ? '#FAFAFA' : '#6B6B6B';
+            document.getElementById('loader-desc').style.color = isDark ? '#71717A' : '#9C9C9C';
+        };
+        setLoaderTheme();
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setLoaderTheme);
+    </script>
+
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- 图标组件 (替代 lucide-react) ---
+        // --- 图标组件 ---
         const Zap = ({ size = 24, className = "" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         );
@@ -41,7 +67,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
         );
 
-        // --- 全局样式注入 ---
+        // --- 全局样式注入 (带深色 CSS 变量) ---
         const StyleInjector = () => (
           <style dangerouslySetInnerHTML={{__html: `
             @import url('https://api.fontshare.com/v2/css?f[]=general-sans@600,700&display=swap');
@@ -50,8 +76,27 @@
             html { scroll-behavior: smooth; }
             
             :root {
+              color-scheme: light dark;
               --bg-color: #FAFAFA;
               --text-main: #0A0A0A;
+              --scrollbar-track: transparent;
+              --scrollbar-thumb: #E8E8EC;
+              --scrollbar-thumb-hover: #9C9C9C;
+              --hero-grad-start: #F0F0F5;
+              --hero-grad-end: #FAFAFA;
+              --hero-shadow: inset 0 10px 30px -10px rgba(0,0,0,0.05);
+            }
+            
+            @media (prefers-color-scheme: dark) {
+              :root {
+                --bg-color: #050505;
+                --text-main: #FAFAFA;
+                --scrollbar-thumb: #3F3F46;
+                --scrollbar-thumb-hover: #52525B;
+                --hero-grad-start: #0E0E11;
+                --hero-grad-end: #050505;
+                --hero-shadow: inset 0 10px 30px -10px rgba(0,0,0,0.5);
+              }
             }
             
             body {
@@ -66,60 +111,29 @@
               width: 100%;
             }
 
-            .font-display { 
-              font-family: 'General Sans', "PingFang SC", "Microsoft YaHei", sans-serif; 
-              letter-spacing: -0.02em; 
-            }
-            
-            .font-body { 
-              font-family: 'DM Sans', "PingFang SC", "Microsoft YaHei", sans-serif; 
-            }
-            
-            .font-code { 
-              font-family: 'JetBrains Mono', monospace; 
-            }
+            .font-display { font-family: 'General Sans', "PingFang SC", "Microsoft YaHei", sans-serif; letter-spacing: -0.02em; }
+            .font-body { font-family: 'DM Sans', "PingFang SC", "Microsoft YaHei", sans-serif; }
+            .font-code { font-family: 'JetBrains Mono', monospace; }
+            .font-space { font-family: 'Space Grotesk', "PingFang SC", "Microsoft YaHei", sans-serif; }
 
-            .font-space {
-              font-family: 'Space Grotesk', "PingFang SC", "Microsoft YaHei", sans-serif;
-            }
-
-            ::selection {
-              background-color: #6366F1;
-              color: #FFFFFF;
-            }
+            ::selection { background-color: #6366F1; color: #FFFFFF; }
 
             ::-webkit-scrollbar { width: 6px; height: 6px; }
-            ::-webkit-scrollbar-track { background: transparent; }
-            ::-webkit-scrollbar-thumb { background: #E8E8EC; border-radius: 4px; }
-            ::-webkit-scrollbar-thumb:hover { background: #9C9C9C; }
+            ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+            ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+            ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 
-            @keyframes blink {
-              0%, 100% { opacity: 1; }
-              50% { opacity: 0; }
-            }
-            .cursor-blink {
-              animation: blink 1s step-end infinite;
-              color: #8B5CF6;
-              font-weight: 400;
-            }
+            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+            .cursor-blink { animation: blink 1s step-end infinite; color: #8B5CF6; font-weight: 400; }
 
-            @keyframes floatDown {
-              from { opacity: 0; transform: translateY(-20px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-            .animate-brand {
-              animation: floatDown 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
+            @keyframes floatDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+            .animate-brand { animation: floatDown 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
             
-            @keyframes fadeInSlideUp {
-              from { opacity: 0; transform: translateY(20px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-            .animate-hero-content {
-              opacity: 0;
-              animation: fadeInSlideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-              animation-delay: 0.3s;
-            }
+            @keyframes fadeInSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            .animate-hero-content { opacity: 0; animation: fadeInSlideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.3s; }
+            
+            /* 隐藏原生加载器 */
+            #loader-container { display: none !important; }
           `}} />
         );
 
@@ -138,32 +152,30 @@
               },
               { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
             );
-            
-            if (ref.current) {
-              observer.observe(ref.current);
-            }
-            
-            return () => {
-              if (ref.current) observer.disconnect();
-            };
+            if (ref.current) observer.observe(ref.current);
+            return () => { if (ref.current) observer.disconnect(); };
           }, []);
 
           return (
-            <div
-              ref={ref}
-              className={`transition-all duration-1000 ease-out ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-              } ${className}`}
-              style={{ transitionDelay: `${delay}ms` }}
-            >
+            <div ref={ref} className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'} ${className}`} style={{ transitionDelay: `${delay}ms` }}>
               {children}
             </div>
           );
         };
 
-        // --- 交互式点阵背景 ---
+        // --- 交互式点阵背景 (兼容深色模式) ---
         const InteractiveDotGrid = () => {
           const canvasRef = useRef(null);
+          const [isDark, setIsDark] = useState(false);
+
+          // 监听系统主题变化
+          useEffect(() => {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            setIsDark(mediaQuery.matches);
+            const handler = (e) => setIsDark(e.matches);
+            mediaQuery.addEventListener('change', handler);
+            return () => mediaQuery.removeEventListener('change', handler);
+          }, []);
 
           useEffect(() => {
             const canvas = canvasRef.current;
@@ -183,10 +195,7 @@
               mouse.y = e.clientY - rect.top;
             };
 
-            const handleMouseLeave = () => {
-              mouse.x = -1000;
-              mouse.y = -1000;
-            };
+            const handleMouseLeave = () => { mouse.x = -1000; mouse.y = -1000; };
 
             window.addEventListener('resize', resize);
             canvas.addEventListener('mousemove', handleMouseMove);
@@ -204,17 +213,16 @@
                   const dy = y - mouse.y;
                   const dist = Math.sqrt(dx * dx + dy * dy);
                   
-                  let alpha = 0.2;
+                  let alpha = isDark ? 0.3 : 0.2;
                   let r = radius;
-                  let color = '#9C9C9C';
+                  // 根据主题设置静止状态的点阵颜色
+                  let color = isDark ? `rgba(82, 82, 91, ${alpha})` : `rgba(156, 156, 156, ${alpha})`;
 
                   if (dist < 120) {
                     const intensity = 1 - dist / 120;
                     r = radius + intensity * 1.5;
-                    alpha = 0.2 + intensity * 0.4;
+                    alpha = (isDark ? 0.3 : 0.2) + intensity * 0.4;
                     color = `rgba(99, 102, 241, ${alpha})`; 
-                  } else {
-                    color = `rgba(156, 156, 156, ${alpha})`;
                   }
 
                   ctx.beginPath();
@@ -233,15 +241,9 @@
               canvas.removeEventListener('mousemove', handleMouseMove);
               canvas.removeEventListener('mouseleave', handleMouseLeave);
             };
-          }, []);
+          }, [isDark]);
 
-          return (
-            <canvas 
-              ref={canvasRef} 
-              className="absolute inset-0 pointer-events-auto"
-              style={{ zIndex: 0 }}
-            />
-          );
+          return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-auto" style={{ zIndex: 0 }} />;
         };
 
         // --- 基础组件 ---
@@ -249,21 +251,15 @@
           const baseStyle = "inline-flex items-center justify-center font-medium transition-all duration-300 text-[14px] rounded-[8px] px-[20px] py-[10px] h-[40px] cursor-pointer outline-none focus:ring-[3px] focus:ring-[#6366F1]/12 no-underline text-center";
           
           const variants = {
-            primary: "bg-[#6366F1] text-[#FFFFFF] hover:bg-[#4F46E5] hover:-translate-y-[2px] hover:shadow-[0_8px_20px_rgba(99,102,241,0.35)]",
-            secondary: "bg-[#FFFFFF] text-[#0A0A0A] border border-[#E8E8EC] hover:-translate-y-[2px] hover:border-[#9C9C9C] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)]",
-            ghost: "bg-transparent text-[#6B6B6B] hover:text-[#0A0A0A] hover:bg-[#E8E8EC]/50"
+            primary: "bg-[#6366F1] text-[#FFFFFF] hover:bg-[#4F46E5] hover:-translate-y-[2px] shadow-[0_4px_12px_rgba(99,102,241,0.2)] hover:shadow-[0_8px_20px_rgba(99,102,241,0.35)] dark:hover:shadow-[0_8px_20px_rgba(99,102,241,0.5)]",
+            secondary: "bg-[#FFFFFF] dark:bg-[#0E0E11] text-[#0A0A0A] dark:text-[#FAFAFA] border border-[#E8E8EC] dark:border-[#27272A] hover:-translate-y-[2px] hover:border-[#9C9C9C] dark:hover:border-[#52525B] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)]",
+            ghost: "bg-transparent text-[#6B6B6B] dark:text-[#A1A1AA] hover:text-[#0A0A0A] dark:hover:text-[#FAFAFA] hover:bg-[#E8E8EC]/50 dark:hover:bg-[#27272A]/50"
           };
 
           const Component = href ? 'a' : 'button';
 
           return (
-            <Component 
-              href={href} 
-              target={target}
-              rel={target === '_blank' ? "noopener noreferrer" : undefined}
-              className={`${baseStyle} ${variants[variant]} ${className}`} 
-              {...props}
-            >
+            <Component href={href} target={target} rel={target === '_blank' ? "noopener noreferrer" : undefined} className={`${baseStyle} ${variants[variant]} ${className}`} {...props}>
               {children}
             </Component>
           );
@@ -272,8 +268,8 @@
         const Card = ({ children, className = '', hoverEffect = true }) => {
           return (
             <div className={`
-              bg-[#FFFFFF] border border-[#E8E8EC] rounded-[12px] 
-              ${hoverEffect ? 'hover:-translate-y-[2px] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300' : ''}
+              bg-[#FFFFFF] dark:bg-[#0E0E11] border border-[#E8E8EC] dark:border-[#27272A] rounded-[12px] 
+              ${hoverEffect ? 'hover:-translate-y-[2px] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-all duration-300' : ''}
               ${className}
             `}>
               {children}
@@ -283,20 +279,14 @@
 
         const Chip = ({ children, status }) => {
           const statusStyles = {
-            default: "bg-[#F3F4F6] text-[#6B6B6B]",
-            success: "bg-[#10B981]/10 text-[#10B981]",
-            warning: "bg-[#F59E0B]/10 text-[#F59E0B]",
-            error: "bg-[#EF4444]/10 text-[#EF4444]",
-            primary: "bg-[#6366F1]/10 text-[#6366F1]"
+            default: "bg-[#F3F4F6] dark:bg-[#27272A] text-[#6B6B6B] dark:text-[#E4E4E7]",
+            success: "bg-[#10B981]/10 text-[#10B981] dark:text-[#34D399]",
+            warning: "bg-[#F59E0B]/10 text-[#F59E0B] dark:text-[#FBBF24]",
+            error: "bg-[#EF4444]/10 text-[#EF4444] dark:text-[#F87171]",
+            primary: "bg-[#6366F1]/10 text-[#6366F1] dark:text-[#818CF8]"
           };
-          
           const style = statusStyles[status] || statusStyles.default;
-
-          return (
-            <span className={`px-[12px] py-[4px] rounded-full text-[12px] font-medium tracking-wide ${style}`}>
-              {children}
-            </span>
-          );
+          return <span className={`px-[12px] py-[4px] rounded-full text-[12px] font-medium tracking-wide ${style}`}>{children}</span>;
         };
 
         // --- 页面分块组件 ---
@@ -305,14 +295,12 @@
           const [isDeleting, setIsDeleting] = useState(false);
           const [loopNum, setLoopNum] = useState(0);
           const [typingSpeed, setTypingSpeed] = useState(150);
-
           const phrases = ["编辑级精度的路由体验。", "企业级的高可用架构。", "无缝的多模型集成方案。"];
 
           useEffect(() => {
             let timer = setTimeout(() => {
               const current = loopNum % phrases.length;
               const fullText = phrases[current];
-
               if (isDeleting) {
                 setTypedText(fullText.substring(0, typedText.length - 1));
                 setTypingSpeed(50);
@@ -320,7 +308,6 @@
                 setTypedText(fullText.substring(0, typedText.length + 1));
                 setTypingSpeed(100);
               }
-
               if (!isDeleting && typedText === fullText) {
                 setTimeout(() => setIsDeleting(true), 2000);
               } else if (isDeleting && typedText === '') {
@@ -329,55 +316,39 @@
                 setTypingSpeed(500);
               }
             }, typingSpeed);
-
             return () => clearTimeout(timer);
           }, [typedText, isDeleting, loopNum, typingSpeed]);
 
           return (
-            <section className="relative pt-[80px] pb-[60px] md:pt-[120px] md:pb-[80px] lg:pt-[160px] lg:pb-[120px] overflow-hidden border-b border-[#E8E8EC] min-h-[100vh] flex flex-col justify-center">
+            <section 
+              className="relative pt-[140px] pb-[60px] md:pt-[180px] md:pb-[80px] lg:pt-[200px] lg:pb-[120px] overflow-hidden border-t border-b border-[#E8E8EC] dark:border-[#27272A] min-h-[100vh] flex flex-col justify-center"
+              style={{
+                background: 'linear-gradient(180deg, var(--hero-grad-start) 0%, var(--hero-grad-end) 250px)',
+                boxShadow: 'var(--hero-shadow)'
+              }}
+            >
               <InteractiveDotGrid />
               <div className="relative z-10 max-w-[1280px] mx-auto px-[24px] text-center flex flex-col items-center">
-                
                 <div className="mb-[24px] animate-brand">
-                  <span className="font-display font-bold text-[28px] md:text-[32px] tracking-tight text-[#8B5CF6]">
-                    Ofoca AI
-                  </span>
+                  <span className="font-display font-bold text-[28px] md:text-[32px] tracking-tight text-[#8B5CF6]">Ofoca AI</span>
                 </div>
-
                 <div className="flex flex-col items-center animate-hero-content w-full">
                   <div className="mb-[24px]">
-                    <Chip status="primary">
-                      <span className="flex items-center gap-2">
-                        <Zap size={12} className="text-[#6366F1]" /> 
-                        v2.4.0 引擎现已上线
-                      </span>
-                    </Chip>
+                    <Chip status="primary"><span className="flex items-center gap-2"><Zap size={12} className="text-[#6366F1] dark:text-[#818CF8]" /> v2.4.0 引擎现已上线</span></Chip>
                   </div>
-                  
-                  <h1 className="font-display font-bold text-[36px] md:text-[56px] lg:text-[64px] leading-[1.2] text-[#0A0A0A] max-w-[900px] min-h-[130px] md:min-h-[140px]">
+                  <h1 className="font-display font-bold text-[36px] md:text-[56px] lg:text-[64px] leading-[1.2] text-[#0A0A0A] dark:text-[#FAFAFA] max-w-[900px] min-h-[130px] md:min-h-[140px]">
                     为您的 AI 基础设施提供 <br className="hidden md:block"/>
                     <span className="text-[#8B5CF6]">{typedText}</span><span className="cursor-blink">|</span>
                   </h1>
-                  
-                  <p className="mt-[16px] md:mt-[24px] text-[16px] md:text-[20px] text-[#6B6B6B] max-w-[700px] leading-relaxed font-body px-[12px] md:px-0">
+                  <p className="mt-[16px] md:mt-[24px] text-[16px] md:text-[20px] text-[#6B6B6B] dark:text-[#A1A1AA] max-w-[700px] leading-relaxed font-body px-[12px] md:px-0">
                     通过单一且无缝集成的端点，访问 OpenAI、Anthropic、Gemini 等众多顶尖模型。为极致性能而生，为清晰架构而设计。
                   </p>
-                  
                   <div className="mt-[40px] flex flex-col sm:flex-row items-center justify-center gap-[16px] w-full px-[12px] md:px-0">
-                    <Button 
-                      variant="primary" 
-                      href="https://coding.cnmnmsl.cloud/dashboard/overview"
-                      target="_blank"
-                      className="h-[48px] md:h-[52px] px-[32px] text-[16px] w-full sm:w-auto shadow-[0_0_20px_rgba(99,102,241,0.4)]"
-                    >
+                    <Button variant="primary" href="https://coding.cnmnmsl.cloud/dashboard/overview" target="_blank" className="h-[48px] md:h-[52px] px-[32px] text-[16px] w-full sm:w-auto shadow-[0_0_20px_rgba(99,102,241,0.4)] dark:shadow-[0_0_20px_rgba(99,102,241,0.2)]">
                       立即开始构建
                     </Button>
-                    <Button 
-                      variant="secondary" 
-                      href="https://coding.cnmnmsl.cloud/about"
-                      className="h-[48px] md:h-[52px] px-[32px] text-[16px] w-full sm:w-auto font-medium"
-                    >
-                      <Book size={18} className="mr-2 text-[#6B6B6B]" /> 探索开发文档
+                    <Button variant="secondary" href="https://coding.cnmnmsl.cloud/about" className="h-[48px] md:h-[52px] px-[32px] text-[16px] w-full sm:w-auto font-medium">
+                      <Book size={18} className="mr-2 text-[#6B6B6B] dark:text-[#A1A1AA]" /> 探索开发文档
                     </Button>
                   </div>
                 </div>
@@ -388,12 +359,11 @@
 
         const CodeIntegration = () => {
           const [copied, setCopied] = useState(false);
-          
           const codeString = `import OpenAI from "openai";
 
 const client = new OpenAI({
   apiKey: "ofoca-xxxxxx-xxxxxx",
-  baseURL: "https://coding.cnmnmsl.cloud/v1", // <-- 仅需更改此行即可接入
+  baseURL: "https://api.ofoca.ai/v1", // <-- 仅需更改此行即可接入
 });
 
 const response = await client.chat.completions.create({
@@ -408,58 +378,42 @@ const response = await client.chat.completions.create({
           };
 
           return (
-            <section className="py-[48px] lg:py-[96px] bg-[#FAFAFA] overflow-hidden">
+            <section className="py-[48px] lg:py-[96px] bg-[#FAFAFA] dark:bg-[#050505] overflow-hidden">
               <div className="max-w-[1280px] mx-auto px-[24px] grid lg:grid-cols-2 gap-[32px] md:gap-[48px] items-center">
                 <RevealOnScroll delay={100}>
-                  <h2 className="font-display font-bold text-[28px] md:text-[32px] text-[#0A0A0A] mb-[16px]">
-                    只需一行代码，掌控全局。
-                  </h2>
-                  <p className="text-[14px] md:text-[15px] text-[#6B6B6B] leading-relaxed mb-[32px]">
+                  <h2 className="font-display font-bold text-[28px] md:text-[32px] text-[#0A0A0A] dark:text-[#FAFAFA] mb-[16px]">只需一行代码，掌控全局。</h2>
+                  <p className="text-[14px] md:text-[15px] text-[#6B6B6B] dark:text-[#A1A1AA] leading-relaxed mb-[32px]">
                     我们严格遵循 OpenAI API 标准格式。您可以将现有的服务提供商无缝切换至 Ofoca AI，在此过程中无需重写任何业务逻辑、提示词工程或函数调用代码。
                   </p>
-                  
                   <div className="flex flex-col gap-[16px]">
-                    {[
-                      "完美替代官方 OpenAI SDK",
-                      "原生支持流式输出与 Function Calling 工具调用",
-                      "自动执行负载均衡与跨区域故障转移",
-                      "毫秒级中转，近乎零延迟的性能开销"
-                    ].map((feature, i) => (
+                    {["完美替代官方 OpenAI SDK", "原生支持流式输出与 Function Calling 工具调用", "自动执行负载均衡与跨区域故障转移", "毫秒级中转，近乎零延迟的性能开销"].map((feature, i) => (
                       <div key={i} className="flex items-center gap-[12px]">
                         <div className="w-[20px] h-[20px] rounded-full bg-[#10B981]/10 flex items-center justify-center shrink-0">
-                          <Check size={12} className="text-[#10B981]" />
+                          <Check size={12} className="text-[#10B981] dark:text-[#34D399]" />
                         </div>
-                        <span className="text-[14px] md:text-[15px] text-[#0A0A0A] font-medium">{feature}</span>
+                        <span className="text-[14px] md:text-[15px] text-[#0A0A0A] dark:text-[#E4E4E7] font-medium">{feature}</span>
                       </div>
                     ))}
                   </div>
                 </RevealOnScroll>
-
                 <RevealOnScroll delay={300} className="w-full min-w-0">
-                  <Card hoverEffect={false} className="bg-[#0A0A0A] border-[#333333] shadow-xl overflow-hidden relative group w-full">
-                    <div className="flex items-center justify-between px-[16px] py-[12px] border-b border-[#333333] bg-[#111111]">
+                  <Card hoverEffect={false} className="bg-[#0A0A0A] dark:bg-[#0A0A0A] border-[#333333] dark:border-[#27272A] shadow-xl overflow-hidden relative group w-full">
+                    <div className="flex items-center justify-between px-[16px] py-[12px] border-b border-[#333333] dark:border-[#27272A] bg-[#111111] dark:bg-[#111111]">
                       <div className="flex items-center gap-[8px]">
-                        <div className="w-3 h-3 rounded-full bg-[#EF4444]"></div>
-                        <div className="w-3 h-3 rounded-full bg-[#F59E0B]"></div>
-                        <div className="w-3 h-3 rounded-full bg-[#10B981]"></div>
+                        <div className="w-3 h-3 rounded-full bg-[#EF4444]"></div><div className="w-3 h-3 rounded-full bg-[#F59E0B]"></div><div className="w-3 h-3 rounded-full bg-[#10B981]"></div>
                       </div>
-                      <span className="text-[12px] text-[#9C9C9C] font-code hidden sm:block">integration.ts</span>
-                      <button 
-                        onClick={copyToClipboard}
-                        className="text-[#9C9C9C] hover:text-[#FFFFFF] transition-colors flex items-center gap-1.5"
-                        title="复制代码"
-                      >
-                        {copied ? <Check size={16} className="text-[#10B981]" /> : <Copy size={16} />}
+                      <span className="text-[12px] text-[#9C9C9C] dark:text-[#71717A] font-code hidden sm:block">integration.ts</span>
+                      <button onClick={copyToClipboard} className="text-[#9C9C9C] dark:text-[#71717A] hover:text-[#FFFFFF] dark:hover:text-[#FAFAFA] transition-colors flex items-center gap-1.5" title="复制代码">
+                        {copied ? <Check size={16} className="text-[#10B981] dark:text-[#34D399]" /> : <Copy size={16} />}
                       </button>
                     </div>
-                    
                     <div className="p-[16px] md:p-[24px] overflow-x-auto w-full max-w-[calc(100vw-48px)] lg:max-w-none box-border">
-                      <pre className="font-code text-[11px] sm:text-[12px] md:text-[13px] leading-[1.6] text-[#E8E8EC]">
+                      <pre className="font-code text-[11px] sm:text-[12px] md:text-[13px] leading-[1.6] text-[#E8E8EC] dark:text-[#E4E4E7]">
                         <code dangerouslySetInnerHTML={{
                           __html: codeString
-                            .replace(/import|from|const|new|await/g, '<span class="text-[#6366F1]">$&</span>')
-                            .replace(/".*?"/g, '<span class="text-[#10B981]">$&</span>')
-                            .replace(/\/\/.*/g, '<span class="text-[#6B6B6B]">$&</span>')
+                            .replace(/import|from|const|new|await/g, '<span class="text-[#6366F1] dark:text-[#818CF8]">$&</span>')
+                            .replace(/".*?"/g, '<span class="text-[#10B981] dark:text-[#34D399]">$&</span>')
+                            .replace(/\/\/.*/g, '<span class="text-[#6B6B6B] dark:text-[#71717A]">$&</span>')
                         }} />
                       </pre>
                     </div>
@@ -472,41 +426,21 @@ const response = await client.chat.completions.create({
 
         const Features = () => {
           const items = [
-            {
-              icon: <Activity size={24} className="text-[#6366F1]" />,
-              title: "实时遥测分析",
-              desc: "在仪表盘中实时监控 Token 消耗、接口延迟和成本账单。为您所有的 AI 支出提供具有可操作性的业务洞察。"
-            },
-            {
-              icon: <Shield size={24} className="text-[#6366F1]" />,
-              title: "企业级安全防护",
-              desc: "所有请求提供端到端加密，支持团队级的自定义速率限制与硬性预算上限设定，杜绝任何意外的财务超支。"
-            },
-            {
-              icon: <Cpu size={24} className="text-[#6366F1]" />,
-              title: "智能动态路由",
-              desc: "基于实时测量的全球网络健康状况与各个供应商的吞吐量，系统会自动将请求路由至最快或最经济的可用节点。"
-            }
+            { icon: <Activity size={24} className="text-[#6366F1] dark:text-[#818CF8]" />, title: "实时遥测分析", desc: "在仪表盘中实时监控 Token 消耗、接口延迟和成本账单。为您所有的 AI 支出提供具有可操作性的业务洞察。" },
+            { icon: <Shield size={24} className="text-[#6366F1] dark:text-[#818CF8]" />, title: "企业级安全防护", desc: "所有请求提供端到端加密，支持团队级的自定义速率限制与硬性预算上限设定，杜绝任何意外的财务超支。" },
+            { icon: <Cpu size={24} className="text-[#6366F1] dark:text-[#818CF8]" />, title: "智能动态路由", desc: "基于实时测量的全球网络健康状况与各个供应商的吞吐量，系统会自动将请求路由至最快或最经济的可用节点。" }
           ];
-
           return (
-            <section className="py-[48px] lg:py-[96px] bg-[#FFFFFF] border-t border-[#E8E8EC]">
+            <section className="py-[48px] lg:py-[96px] bg-[#FFFFFF] dark:bg-[#0E0E11] border-t border-[#E8E8EC] dark:border-[#27272A]">
               <div className="max-w-[1280px] mx-auto px-[24px]">
-                <RevealOnScroll>
-                  <div className="text-center mb-[32px] md:mb-[48px]">
-                    <h2 className="font-display font-bold text-[28px] md:text-[32px] text-[#0A0A0A]">为生产环境而生。</h2>
-                  </div>
-                </RevealOnScroll>
-                
+                <RevealOnScroll><div className="text-center mb-[32px] md:mb-[48px]"><h2 className="font-display font-bold text-[28px] md:text-[32px] text-[#0A0A0A] dark:text-[#FAFAFA]">为生产环境而生。</h2></div></RevealOnScroll>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-[16px] md:gap-[24px]">
                   {items.map((item, idx) => (
                     <RevealOnScroll key={idx} delay={idx * 150}>
                       <Card className="p-[24px] md:p-[32px] flex flex-col items-start text-left h-full">
-                        <div className="w-[48px] h-[48px] rounded-full bg-[#6366F1]/10 flex items-center justify-center mb-[16px] md:mb-[20px] shrink-0">
-                          {item.icon}
-                        </div>
-                        <h3 className="text-[18px] font-bold text-[#0A0A0A] mb-[8px] md:mb-[12px] font-display">{item.title}</h3>
-                        <p className="text-[14px] text-[#6B6B6B] leading-relaxed">{item.desc}</p>
+                        <div className="w-[48px] h-[48px] rounded-full bg-[#6366F1]/10 flex items-center justify-center mb-[16px] md:mb-[20px] shrink-0">{item.icon}</div>
+                        <h3 className="text-[18px] font-bold text-[#0A0A0A] dark:text-[#FAFAFA] mb-[8px] md:mb-[12px] font-display">{item.title}</h3>
+                        <p className="text-[14px] text-[#6B6B6B] dark:text-[#A1A1AA] leading-relaxed">{item.desc}</p>
                       </Card>
                     </RevealOnScroll>
                   ))}
@@ -524,56 +458,35 @@ const response = await client.chat.completions.create({
             { name: "llama-3-70b-instruct", provider: "Meta", context: "8k", price: "$0.70 / 1M", status: "success" },
             { name: "mistral-large", provider: "Mistral", context: "32k", price: "$4.00 / 1M", status: "warning" },
           ];
-
           return (
-            <section id="models" className="py-[48px] lg:py-[96px] bg-[#FAFAFA] border-t border-[#E8E8EC] overflow-hidden">
+            <section id="models" className="py-[48px] lg:py-[96px] bg-[#FAFAFA] dark:bg-[#050505] border-t border-[#E8E8EC] dark:border-[#27272A] overflow-hidden">
               <div className="max-w-[1280px] mx-auto px-[24px]">
                 <RevealOnScroll>
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-[24px] md:mb-[32px]">
                     <div>
-                      <h2 className="font-display font-bold text-[28px] md:text-[32px] text-[#0A0A0A] mb-[8px]">支持的模型阵列</h2>
-                      <p className="text-[14px] md:text-[15px] text-[#6B6B6B]">计费彻底透明。仅按实际消耗的 Token 计费，无任何附加溢价。</p>
+                      <h2 className="font-display font-bold text-[28px] md:text-[32px] text-[#0A0A0A] dark:text-[#FAFAFA] mb-[8px]">支持的模型阵列</h2>
+                      <p className="text-[14px] md:text-[15px] text-[#6B6B6B] dark:text-[#A1A1AA]">计费彻底透明。仅按实际消耗的 Token 计费，无任何附加溢价。</p>
                     </div>
-                    <Button 
-                      variant="secondary" 
-                      href="https://coding.cnmnmsl.cloud/pricing"
-                      className="mt-4 md:mt-0 w-full md:w-auto"
-                    >
-                      查看全部 100+ 模型
-                    </Button>
+                    <Button variant="secondary" href="https://coding.cnmnmsl.cloud/pricing" className="mt-4 md:mt-0 w-full md:w-auto">查看全部 100+ 模型</Button>
                   </div>
                 </RevealOnScroll>
-
                 <RevealOnScroll delay={200} className="w-full min-w-0">
                   <Card className="overflow-hidden w-full">
                     <div className="overflow-x-auto w-full max-w-[calc(100vw-48px)] lg:max-w-none">
                       <div className="min-w-[600px]">
-                        <div className="grid grid-cols-12 gap-4 px-[20px] py-[12px] bg-[#FAFAFA] border-b border-[#E8E8EC] text-[12px] font-bold text-[#9C9C9C] uppercase tracking-wider">
-                          <div className="col-span-4">模型名称</div>
-                          <div className="col-span-3">供应商</div>
-                          <div className="col-span-2">上下文长度</div>
-                          <div className="col-span-3 text-right">计费标准 (输入/输出)</div>
+                        <div className="grid grid-cols-12 gap-4 px-[20px] py-[12px] bg-[#FAFAFA] dark:bg-[#0E0E11] border-b border-[#E8E8EC] dark:border-[#27272A] text-[12px] font-bold text-[#9C9C9C] dark:text-[#71717A] uppercase tracking-wider">
+                          <div className="col-span-4">模型名称</div><div className="col-span-3">供应商</div><div className="col-span-2">上下文长度</div><div className="col-span-3 text-right">计费标准 (输入/输出)</div>
                         </div>
-                        
                         <div className="flex flex-col">
                           {models.map((model, idx) => (
-                            <div 
-                              key={idx} 
-                              className="grid grid-cols-12 gap-4 px-[20px] py-[20px] items-center border-b border-[#E8E8EC] last:border-0 hover:bg-[#F9FAFB] transition-colors"
-                            >
+                            <div key={idx} className="grid grid-cols-12 gap-4 px-[20px] py-[20px] items-center border-b border-[#E8E8EC] dark:border-[#27272A] last:border-0 hover:bg-[#F9FAFB] dark:hover:bg-[#18181B] transition-colors">
                               <div className="col-span-4 flex items-center gap-3">
                                 <div className={`w-[8px] h-[8px] rounded-full shrink-0 ${model.status === 'success' ? 'bg-[#10B981]' : 'bg-[#F59E0B]'}`}></div>
-                                <span className="font-space text-[14px] md:text-[16px] tracking-tight text-[#0A0A0A] font-bold">{model.name}</span>
+                                <span className="font-space text-[14px] md:text-[16px] tracking-tight text-[#0A0A0A] dark:text-[#FAFAFA] font-bold">{model.name}</span>
                               </div>
-                              <div className="col-span-3">
-                                <span className="font-space text-[14px] md:text-[15px] font-medium text-[#6B6B6B]">{model.provider}</span>
-                              </div>
-                              <div className="col-span-2">
-                                <Chip status="default"><span className="font-space font-medium text-[11px] md:text-[12px]">{model.context}</span></Chip>
-                              </div>
-                              <div className="col-span-3 text-right">
-                                <span className="font-space text-[14px] md:text-[15px] font-medium text-[#0A0A0A]">{model.price}</span>
-                              </div>
+                              <div className="col-span-3"><span className="font-space text-[14px] md:text-[15px] font-medium text-[#6B6B6B] dark:text-[#A1A1AA]">{model.provider}</span></div>
+                              <div className="col-span-2"><Chip status="default"><span className="font-space font-medium text-[11px] md:text-[12px]">{model.context}</span></Chip></div>
+                              <div className="col-span-3 text-right"><span className="font-space text-[14px] md:text-[15px] font-medium text-[#0A0A0A] dark:text-[#FAFAFA]">{model.price}</span></div>
                             </div>
                           ))}
                         </div>
@@ -588,21 +501,20 @@ const response = await client.chat.completions.create({
 
         const Footer = () => {
           return (
-            <footer className="bg-[#FFFFFF] border-t border-[#E8E8EC] py-[48px] md:py-[64px]">
+            <footer className="bg-[#FFFFFF] dark:bg-[#0E0E11] border-t border-[#E8E8EC] dark:border-[#27272A] py-[48px] md:py-[64px]">
               <div className="max-w-[1280px] mx-auto px-[24px] flex flex-col items-center text-center">
-                <a href="#" className="font-display font-bold text-[24px] tracking-tight text-[#0A0A0A] mb-[16px] inline-block no-underline">
+                <a href="#" className="font-display font-bold text-[24px] tracking-tight text-[#0A0A0A] dark:text-[#FAFAFA] mb-[16px] inline-block no-underline">
                     <span className="text-[#8B5CF6]">Ofoca AI</span>
                 </a>
-                <p className="text-[13px] md:text-[14px] text-[#6B6B6B] leading-relaxed max-w-[500px] mb-[40px] px-[12px] md:px-0">
+                <p className="text-[13px] md:text-[14px] text-[#6B6B6B] dark:text-[#A1A1AA] leading-relaxed max-w-[500px] mb-[40px] px-[12px] md:px-0">
                   API 路由领域的编辑级标准。在不妥协安全与稳定性的前提下，全速推动您的产品构建。
                 </p>
-                
-                <div className="flex flex-col md:flex-row items-center justify-between w-full pt-[32px] border-t border-[#E8E8EC] gap-[16px] md:gap-0">
-                  <p className="text-[13px] text-[#9C9C9C]">© 2026 Ofoca AI. 保留所有权利。</p>
+                <div className="flex flex-col md:flex-row items-center justify-between w-full pt-[32px] border-t border-[#E8E8EC] dark:border-[#27272A] gap-[16px] md:gap-0">
+                  <p className="text-[13px] text-[#9C9C9C] dark:text-[#71717A]">© 2026 Ofoca AI. 保留所有权利。</p>
                   <div className="flex items-center gap-[16px]">
                     <div className="flex items-center gap-2">
                        <div className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></div>
-                       <span className="text-[13px] font-medium text-[#6B6B6B]">全部系统运行正常</span>
+                       <span className="text-[13px] font-medium text-[#6B6B6B] dark:text-[#A1A1AA]">全部系统运行正常</span>
                     </div>
                   </div>
                 </div>
@@ -626,7 +538,6 @@ const response = await client.chat.completions.create({
           );
         }
 
-        // --- 渲染应用 ---
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
