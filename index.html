@@ -1,240 +1,631 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ofoca AI - 您的下一代大模型 API 聚合平台</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        gray: {
-                            850: '#1f2937',
-                            900: '#111827',
-                            950: '#030712',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                    }
-                }
-            }
+```react
+import React, { useEffect, useRef, useState } from 'react';
+import { 
+  Terminal, 
+  Book, 
+  Activity, 
+  Shield, 
+  Zap, 
+  Cpu, 
+  Check, 
+  Copy
+} from 'lucide-react';
+
+// --- Font & Global Styles Injection ---
+const StyleInjector = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @import url('https://api.fontshare.com/v2/css?f[]=general-sans@600,700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=JetBrains+Mono&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+    
+    html {
+      scroll-behavior: smooth; /* 全局平滑滚动 */
+    }
+
+    :root {
+      --bg-color: #FAFAFA;
+      --text-main: #0A0A0A;
+    }
+    
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: 'DM Sans', "PingFang SC", "Microsoft YaHei", sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden; /* 严格防止全局横向滚动 */
+      width: 100%;
+    }
+
+    .font-display { 
+      font-family: 'General Sans', "PingFang SC", "Microsoft YaHei", sans-serif; 
+      letter-spacing: -0.02em; 
+    }
+    
+    .font-body { 
+      font-family: 'DM Sans', "PingFang SC", "Microsoft YaHei", sans-serif; 
+    }
+    
+    .font-code { 
+      font-family: 'JetBrains Mono', monospace; 
+    }
+
+    .font-space {
+      font-family: 'Space Grotesk', "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    /* Custom Selection */
+    ::selection {
+      background-color: #6366F1;
+      color: #FFFFFF;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #E8E8EC;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #9C9C9C;
+    }
+
+    /* Typewriter Cursor Blink */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .cursor-blink {
+      animation: blink 1s step-end infinite;
+      color: #8B5CF6;
+      font-weight: 400;
+    }
+
+    /* 品牌名专属动画 */
+    @keyframes floatDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-brand {
+      animation: floatDown 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    /* 延迟的平滑淡入 */
+    @keyframes fadeInSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-hero-content {
+      opacity: 0;
+      animation: fadeInSlideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 0.3s;
+    }
+  `}} />
+);
+
+// --- Scroll Reveal Animation Component ---
+const RevealOnScroll = ({ children, delay = 0, className = '' }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(ref.current);
         }
-    </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+    
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+    
+    return () => {
+      if (ref.current) observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-1000 ease-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+      } ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+};
+
+// --- Interactive Dot Grid Canvas ---
+const InteractiveDotGrid = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let mouse = { x: -1000, y: -1000 };
+
+    const resize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = canvas.parentElement.offsetHeight;
+    };
+
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+    };
+
+    const handleMouseLeave = () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+    };
+
+    window.addEventListener('resize', resize);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseleave', handleMouseLeave);
+    resize();
+
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+      const spacing = 32; // Generous spacing 
+      const radius = 1.5;
+
+      for (let x = spacing / 2; x < width; x += spacing) {
+        for (let y = spacing / 2; y < height; y += spacing) {
+          const dx = x - mouse.x;
+          const dy = y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          let alpha = 0.2;
+          let r = radius;
+          let color = '#9C9C9C'; // Neutral color
+
+          // Interactive effect
+          if (dist < 120) {
+            const intensity = 1 - dist / 120;
+            r = radius + intensity * 1.5;
+            alpha = 0.2 + intensity * 0.4;
+            // Shift towards primary indigo when close
+            color = `rgba(99, 102, 241, ${alpha})`; 
+          } else {
+            color = `rgba(156, 156, 156, ${alpha})`;
+          }
+
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+        }
+      }
+      requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className="absolute inset-0 pointer-events-auto"
+      style={{ zIndex: 0 }}
+    />
+  );
+};
+
+// --- Components ---
+
+const Button = ({ children, variant = 'primary', className = '', href, target, ...props }) => {
+  const baseStyle = "inline-flex items-center justify-center font-medium transition-all duration-300 text-[14px] rounded-[8px] px-[20px] py-[10px] h-[40px] cursor-pointer outline-none focus:ring-[3px] focus:ring-[#6366F1]/12 no-underline text-center";
+  
+  const variants = {
+    primary: "bg-[#6366F1] text-[#FFFFFF] hover:bg-[#4F46E5] hover:-translate-y-[2px] hover:shadow-[0_8px_20px_rgba(99,102,241,0.35)]",
+    secondary: "bg-[#FFFFFF] text-[#0A0A0A] border border-[#E8E8EC] hover:-translate-y-[2px] hover:border-[#9C9C9C] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)]",
+    ghost: "bg-transparent text-[#6B6B6B] hover:text-[#0A0A0A] hover:bg-[#E8E8EC]/50"
+  };
+
+  const Component = href ? 'a' : 'button';
+
+  return (
+    <Component 
+      href={href} 
+      target={target}
+      rel={target === '_blank' ? "noopener noreferrer" : undefined}
+      className={`${baseStyle} ${variants[variant]} ${className}`} 
+      {...props}
+    >
+      {children}
+    </Component>
+  );
+};
+
+const Card = ({ children, className = '', hoverEffect = true }) => {
+  return (
+    <div className={`
+      bg-[#FFFFFF] border border-[#E8E8EC] rounded-[12px] 
+      ${hoverEffect ? 'hover:-translate-y-[2px] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300' : ''}
+      ${className}
+    `}>
+      {children}
+    </div>
+  );
+};
+
+const Chip = ({ children, status }) => {
+  const statusStyles = {
+    default: "bg-[#F3F4F6] text-[#6B6B6B]",
+    success: "bg-[#10B981]/10 text-[#10B981]",
+    warning: "bg-[#F59E0B]/10 text-[#F59E0B]",
+    error: "bg-[#EF4444]/10 text-[#EF4444]",
+    primary: "bg-[#6366F1]/10 text-[#6366F1]"
+  };
+  
+  const style = statusStyles[status] || statusStyles.default;
+
+  return (
+    <span className={`px-[12px] py-[4px] rounded-full text-[12px] font-medium tracking-wide ${style}`}>
+      {children}
+    </span>
+  );
+};
+
+// --- Page Sections ---
+
+const Hero = () => {
+  const [typedText, setTypedText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+  const [typingSpeed, setTypingSpeed] = useState(150);
+
+  const phrases = ["编辑级精度的路由体验。", "企业级的高可用架构。", "无缝的多模型集成方案。"];
+
+  // Typewriter Effect Logic
+  useEffect(() => {
+    let timer = setTimeout(() => {
+      const current = loopNum % phrases.length;
+      const fullText = phrases[current];
+
+      if (isDeleting) {
+        setTypedText(fullText.substring(0, typedText.length - 1));
+        setTypingSpeed(50);
+      } else {
+        setTypedText(fullText.substring(0, typedText.length + 1));
+        setTypingSpeed(100);
+      }
+
+      if (!isDeleting && typedText === fullText) {
+        setTimeout(() => setIsDeleting(true), 2000); // Pause before deleting
+      } else if (isDeleting && typedText === '') {
+        setIsDeleting(false);
+        setLoopNum(loopNum + 1);
+        setTypingSpeed(500); // Pause before typing next
+      }
+    }, typingSpeed);
+
+    return () => clearTimeout(timer);
+  }, [typedText, isDeleting, loopNum, typingSpeed]);
+
+  return (
+    <section className="relative pt-[80px] pb-[60px] md:pt-[120px] md:pb-[80px] lg:pt-[160px] lg:pb-[120px] overflow-hidden border-b border-[#E8E8EC] min-h-[100vh] flex flex-col justify-center">
+      <InteractiveDotGrid />
+      <div className="relative z-10 max-w-[1280px] mx-auto px-[24px] text-center flex flex-col items-center">
         
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #030712;
-            color: #f3f4f6;
-            scroll-behavior: smooth;
-        }
+        {/* 新增：优雅滑入的品牌名 */}
+        <div className="mb-[24px] animate-brand">
+          <span className="font-display font-bold text-[28px] md:text-[32px] tracking-tight text-[#8B5CF6]">
+            Ofoca AI
+          </span>
+        </div>
 
-        .gradient-text {
-            background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+        {/* 下半部分内容，带有延迟动画，创造错落有致的丝滑感 */}
+        <div className="flex flex-col items-center animate-hero-content w-full">
+          <div className="mb-[24px]">
+            <Chip status="primary">
+              <span className="flex items-center gap-2">
+                <Zap size={12} className="text-[#6366F1]" /> 
+                v2.4.0 引擎现已上线
+              </span>
+            </Chip>
+          </div>
+          
+          <h1 className="font-display font-bold text-[36px] md:text-[56px] lg:text-[64px] leading-[1.2] text-[#0A0A0A] max-w-[900px] min-h-[130px] md:min-h-[140px]">
+            为您的 AI 基础设施提供 <br className="hidden md:block"/>
+            <span className="text-[#8B5CF6]">{typedText}</span><span className="cursor-blink">|</span>
+          </h1>
+          
+          <p className="mt-[16px] md:mt-[24px] text-[16px] md:text-[20px] text-[#6B6B6B] max-w-[700px] leading-relaxed font-body px-[12px] md:px-0">
+            通过单一且无缝集成的端点，访问 OpenAI、Anthropic、Gemini 等众多顶尖模型。为极致性能而生，为清晰架构而设计。
+          </p>
+          
+          <div className="mt-[40px] flex flex-col sm:flex-row items-center justify-center gap-[16px] w-full px-[12px] md:px-0">
+            <Button 
+              variant="primary" 
+              href="https://coding.cnmnmsl.cloud/dashboard/overview"
+              target="_blank"
+              className="h-[48px] md:h-[52px] px-[32px] text-[16px] w-full sm:w-auto shadow-[0_0_20px_rgba(99,102,241,0.4)]"
+            >
+              立即开始构建
+            </Button>
+            <Button 
+              variant="secondary" 
+              href="https://coding.cnmnmsl.cloud/about"
+              className="h-[48px] md:h-[52px] px-[32px] text-[16px] w-full sm:w-auto font-medium"
+            >
+              <Book size={18} className="mr-2 text-[#6B6B6B]" /> 探索开发文档
+            </Button>
+          </div>
+        </div>
 
-        .hero-glow {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(96, 165, 250, 0.15) 0%, rgba(3, 7, 18, 0) 70%);
-            top: -200px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: -1;
-            pointer-events: none;
-        }
+      </div>
+    </section>
+  );
+};
 
-        .card-hover {
-            transition: all 0.3s ease;
-        }
+const CodeIntegration = () => {
+  const [copied, setCopied] = useState(false);
+  
+  const codeString = `import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "ofoca-xxxxxx-xxxxxx",
+  baseURL: "https://api.ofoca.ai/v1", // <-- 仅需更改此行即可接入
+});
+
+const response = await client.chat.completions.create({
+  model: "claude-3-5-sonnet", // 享受所有模型的原生级支持
+  messages: [{ role: "user", content: "Hello, system." }],
+});`;
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(codeString);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <section className="py-[48px] lg:py-[96px] bg-[#FAFAFA] overflow-hidden">
+      <div className="max-w-[1280px] mx-auto px-[24px] grid lg:grid-cols-2 gap-[32px] md:gap-[48px] items-center">
+        <RevealOnScroll delay={100}>
+          <h2 className="font-display font-bold text-[28px] md:text-[32px] text-[#0A0A0A] mb-[16px]">
+            只需一行代码，掌控全局。
+          </h2>
+          <p className="text-[14px] md:text-[15px] text-[#6B6B6B] leading-relaxed mb-[32px]">
+            我们严格遵循 OpenAI API 标准格式。您可以将现有的服务提供商无缝切换至 Ofoca AI，在此过程中无需重写任何业务逻辑、提示词工程或函数调用代码。
+          </p>
+          
+          <div className="flex flex-col gap-[16px]">
+            {[
+              "完美替代官方 OpenAI SDK",
+              "原生支持流式输出与 Function Calling 工具调用",
+              "自动执行负载均衡与跨区域故障转移",
+              "毫秒级中转，近乎零延迟的性能开销"
+            ].map((feature, i) => (
+              <div key={i} className="flex items-center gap-[12px]">
+                <div className="w-[20px] h-[20px] rounded-full bg-[#10B981]/10 flex items-center justify-center shrink-0">
+                  <Check size={12} className="text-[#10B981]" />
+                </div>
+                <span className="text-[14px] md:text-[15px] text-[#0A0A0A] font-medium">{feature}</span>
+              </div>
+            ))}
+          </div>
+        </RevealOnScroll>
+
+        {/* 关键修复：加入 min-w-0 防止 Grid 子项被内容撑破 */}
+        <RevealOnScroll delay={300} className="w-full min-w-0">
+          <Card hoverEffect={false} className="bg-[#0A0A0A] border-[#333333] shadow-xl overflow-hidden relative group w-full">
+            <div className="flex items-center justify-between px-[16px] py-[12px] border-b border-[#333333] bg-[#111111]">
+              <div className="flex items-center gap-[8px]">
+                <div className="w-3 h-3 rounded-full bg-[#EF4444]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#F59E0B]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#10B981]"></div>
+              </div>
+              <span className="text-[12px] text-[#9C9C9C] font-code hidden sm:block">integration.ts</span>
+              <button 
+                onClick={copyToClipboard}
+                className="text-[#9C9C9C] hover:text-[#FFFFFF] transition-colors flex items-center gap-1.5"
+                title="复制代码"
+              >
+                {copied ? <Check size={16} className="text-[#10B981]" /> : <Copy size={16} />}
+              </button>
+            </div>
+            
+            {/* 关键修复：加入 max-w-[calc(100vw-48px)] 强行限制手机端最大宽度，保证只在内部滚动 */}
+            <div className="p-[16px] md:p-[24px] overflow-x-auto w-full max-w-[calc(100vw-48px)] lg:max-w-none box-border">
+              {/* 移除了导致溢出的 min-w-max */}
+              <pre className="font-code text-[11px] sm:text-[12px] md:text-[13px] leading-[1.6] text-[#E8E8EC]">
+                <code dangerouslySetInnerHTML={{
+                  __html: codeString
+                    .replace(/import|from|const|new|await/g, '<span class="text-[#6366F1]">$&</span>')
+                    .replace(/".*?"/g, '<span class="text-[#10B981]">$&</span>')
+                    .replace(/\/\/.*/g, '<span class="text-[#6B6B6B]">$&</span>')
+                }} />
+              </pre>
+            </div>
+          </Card>
+        </RevealOnScroll>
+      </div>
+    </section>
+  );
+};
+
+const Features = () => {
+  const items = [
+    {
+      icon: <Activity size={24} className="text-[#6366F1]" />,
+      title: "实时遥测分析",
+      desc: "在仪表盘中实时监控 Token 消耗、接口延迟和成本账单。为您所有的 AI 支出提供具有可操作性的业务洞察。"
+    },
+    {
+      icon: <Shield size={24} className="text-[#6366F1]" />,
+      title: "企业级安全防护",
+      desc: "所有请求提供端到端加密，支持团队级的自定义速率限制与硬性预算上限设定，杜绝任何意外的财务超支。"
+    },
+    {
+      icon: <Cpu size={24} className="text-[#6366F1]" />,
+      title: "智能动态路由",
+      desc: "基于实时测量的全球网络健康状况与各个供应商的吞吐量，系统会自动将请求路由至最快或最经济的可用节点。"
+    }
+  ];
+
+  return (
+    <section className="py-[48px] lg:py-[96px] bg-[#FFFFFF] border-t border-[#E8E8EC]">
+      <div className="max-w-[1280px] mx-auto px-[24px]">
+        <RevealOnScroll>
+          <div className="text-center mb-[32px] md:mb-[48px]">
+            <h2 className="font-display font-bold text-[28px] md:text-[32px] text-[#0A0A0A]">为生产环境而生。</h2>
+          </div>
+        </RevealOnScroll>
         
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-            border-color: #374151;
-        }
-    </style>
-</head>
-<body class="antialiased selection:bg-blue-500 selection:text-white relative z-0">
-
-    <div class="hero-glow"></div>
-
-    <main class="pt-16 pb-16 sm:pt-24 sm:pb-24 lg:pb-32 overflow-hidden text-center px-4">
-        <div class="max-w-5xl mx-auto">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800/50 border border-gray-700 text-sm text-gray-300 mb-8">
-                <span class="flex h-2 w-2 rounded-full bg-green-500"></span>
-                全面支持 New API 架构，服务运行稳定
-            </div>
-            <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8">
-                极速、稳定的 <br class="hidden sm:block">
-                <span class="gradient-text">大模型 API 聚合枢纽</span>
-            </h1>
-            <p class="mt-4 text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
-                只需一个 API Key，即可无缝调用全球顶尖大语言模型。完美兼容 OpenAI 接口协议，为开发者提供高并发、低延迟的优质 AI 代理服务。
-            </p>
-            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-                <a href="https://coding.cnmnmsl.cloud/keys" target="_top" class="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-rocket"></i> 获取 API Key
-                </a>
-                <a href="https://coding.cnmnmsl.cloud/about" target="_top" class="w-full sm:w-auto px-8 py-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-code"></i> 查看开发文档
-                </a>
-            </div>
-            
-            <div class="mt-16 grid grid-cols-2 gap-8 md:grid-cols-4 border-t border-gray-800 pt-10">
-                <div>
-                    <div class="text-3xl font-bold text-white mb-1">99.9%</div>
-                    <div class="text-sm text-gray-400">SLA 保证</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[16px] md:gap-[24px]">
+          {items.map((item, idx) => (
+            <RevealOnScroll key={idx} delay={idx * 150}>
+              <Card className="p-[24px] md:p-[32px] flex flex-col items-start text-left h-full">
+                <div className="w-[48px] h-[48px] rounded-full bg-[#6366F1]/10 flex items-center justify-center mb-[16px] md:mb-[20px] shrink-0">
+                  {item.icon}
                 </div>
-                <div>
-                    <div class="text-3xl font-bold text-white mb-1">100+</div>
-                    <div class="text-sm text-gray-400">支持模型数量</div>
-                </div>
-                <div>
-                    <div class="text-3xl font-bold text-white mb-1">&lt;50ms</div>
-                    <div class="text-sm text-gray-400">平均响应延迟</div>
-                </div>
-                <div>
-                    <div class="text-3xl font-bold text-white mb-1">24/7</div>
-                    <div class="text-sm text-gray-400">技术支持</div>
-                </div>
-            </div>
+                <h3 className="text-[18px] font-bold text-[#0A0A0A] mb-[8px] md:mb-[12px] font-display">{item.title}</h3>
+                <p className="text-[14px] text-[#6B6B6B] leading-relaxed">{item.desc}</p>
+              </Card>
+            </RevealOnScroll>
+          ))}
         </div>
-    </main>
-
-    <section id="features" class="py-20 bg-gray-900 border-y border-gray-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">为什么选择 Ofoca AI？</h2>
-                <p class="mt-4 text-lg text-gray-400">基于先进的 New API 系统构建，为您提供企业级的调用体验。</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 card-hover">
-                    <div class="w-12 h-12 bg-blue-900/50 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-bolt text-blue-400 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-3">极致并发与高可用</h3>
-                    <p class="text-gray-400 leading-relaxed">
-                        采用全球分布式节点部署，提供企业级的高并发承载能力。智能重试与多渠道负载均衡机制，确保您的每一次调用都稳定可靠。
-                    </p>
-                </div>
-                <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 card-hover">
-                    <div class="w-12 h-12 bg-purple-900/50 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-puzzle-piece text-purple-400 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-3">100% 协议兼容</h3>
-                    <p class="text-gray-400 leading-relaxed">
-                        完全兼容 OpenAI 原生接口格式。无论是 LangChain、AutoGPT 还是 NextChat 等各类主流 AI 应用，只需修改 Base URL 即可无缝零代码切换。
-                    </p>
-                </div>
-                <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 card-hover">
-                    <div class="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-chart-pie text-green-400 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-3">精准的日志与计费</h3>
-                    <p class="text-gray-400 leading-relaxed">
-                        内置强大的后台管理系统，提供详尽的请求日志分析与数据统计面板。Token 消耗一目了然，计费透明公开，杜绝任何隐形消费。
-                    </p>
-                </div>
-            </div>
-        </div>
+      </div>
     </section>
+  );
+};
 
-    <section id="models" class="py-20 bg-gray-950">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-3xl font-bold tracking-tight text-white mb-4">一个接口，连接全部 AI 生态</h2>
-            <p class="text-lg text-gray-400 mb-12 max-w-2xl mx-auto">无需分别注册海外账号、绑定信用卡。Ofoca AI 已为您聚合市面上所有主流大语言模型，并持续更新中。</p>
-            
-            <div class="flex flex-wrap justify-center gap-4">
-                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
-                    <i class="fa-solid fa-robot text-gray-300"></i>
-                    <span class="font-medium">GPT-4o / GPT-4 Turbo</span>
-                </div>
-                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
-                    <i class="fa-solid fa-brain text-purple-400"></i>
-                    <span class="font-medium">Claude 3.5 (Sonnet/Opus)</span>
-                </div>
-                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
-                    <i class="fa-solid fa-sparkles text-blue-400"></i>
-                    <span class="font-medium">Gemini 1.5 Pro</span>
-                </div>
-                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
-                    <i class="fa-solid fa-feather text-teal-400"></i>
-                    <span class="font-medium">Llama 3</span>
-                </div>
-                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
-                    <i class="fa-solid fa-language text-orange-400"></i>
-                    <span class="font-medium">通义千问 / 智谱 GLM</span>
-                </div>
-                <div class="px-6 py-3 bg-gray-900 border border-gray-700 rounded-xl flex items-center gap-3">
-                    <i class="fa-solid fa-palette text-pink-400"></i>
-                    <span class="font-medium">Midjourney / DALL·E 3</span>
-                </div>
-            </div>
-        </div>
-    </section>
+const ModelsList = () => {
+  const models = [
+    { name: "gpt-4o", provider: "OpenAI", context: "128k", price: "$5.00 / 1M", status: "success" },
+    { name: "claude-3-5-sonnet", provider: "Anthropic", context: "200k", price: "$3.00 / 1M", status: "success" },
+    { name: "gemini-1.5-pro", provider: "Google", context: "2M", price: "$3.50 / 1M", status: "success" },
+    { name: "llama-3-70b-instruct", provider: "Meta", context: "8k", price: "$0.70 / 1M", status: "success" },
+    { name: "mistral-large", provider: "Mistral", context: "32k", price: "$4.00 / 1M", status: "warning" },
+  ];
 
-    <section id="integration" class="py-20 bg-gray-900 border-t border-gray-800">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-10">
-                <h2 class="text-3xl font-bold tracking-tight text-white mb-4">简单两步，即刻接入</h2>
-                <p class="text-lg text-gray-400">替换官方的 Base URL，剩下的交给我们。</p>
+  return (
+    <section id="models" className="py-[48px] lg:py-[96px] bg-[#FAFAFA] border-t border-[#E8E8EC] overflow-hidden">
+      <div className="max-w-[1280px] mx-auto px-[24px]">
+        <RevealOnScroll>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-[24px] md:mb-[32px]">
+            <div>
+              <h2 className="font-display font-bold text-[28px] md:text-[32px] text-[#0A0A0A] mb-[8px]">支持的模型阵列</h2>
+              <p className="text-[14px] md:text-[15px] text-[#6B6B6B]">计费彻底透明。仅按实际消耗的 Token 计费，无任何附加溢价。</p>
             </div>
-            
-            <div class="bg-[#1e1e1e] rounded-xl overflow-hidden border border-gray-700 shadow-2xl">
-                <div class="flex items-center px-4 py-3 bg-[#2d2d2d] border-b border-gray-700">
-                    <div class="flex space-x-2">
-                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+            <Button 
+              variant="secondary" 
+              href="https://coding.cnmnmsl.cloud/pricing"
+              className="mt-4 md:mt-0 w-full md:w-auto"
+            >
+              查看全部 100+ 模型
+            </Button>
+          </div>
+        </RevealOnScroll>
+
+        <RevealOnScroll delay={200} className="w-full min-w-0">
+          <Card className="overflow-hidden w-full">
+            {/* 同样地，限制表格最大宽度，避免由于表格过宽撑破网页 */}
+            <div className="overflow-x-auto w-full max-w-[calc(100vw-48px)] lg:max-w-none">
+              <div className="min-w-[600px]">
+                {/* Header */}
+                <div className="grid grid-cols-12 gap-4 px-[20px] py-[12px] bg-[#FAFAFA] border-b border-[#E8E8EC] text-[12px] font-bold text-[#9C9C9C] uppercase tracking-wider">
+                  <div className="col-span-4">模型名称</div>
+                  <div className="col-span-3">供应商</div>
+                  <div className="col-span-2">上下文长度</div>
+                  <div className="col-span-3 text-right">计费标准 (输入/输出)</div>
+                </div>
+                
+                {/* List */}
+                <div className="flex flex-col">
+                  {models.map((model, idx) => (
+                    <div 
+                      key={idx} 
+                      className="grid grid-cols-12 gap-4 px-[20px] py-[20px] items-center border-b border-[#E8E8EC] last:border-0 hover:bg-[#F9FAFB] transition-colors"
+                    >
+                      <div className="col-span-4 flex items-center gap-3">
+                        <div className={`w-[8px] h-[8px] rounded-full shrink-0 ${model.status === 'success' ? 'bg-[#10B981]' : 'bg-[#F59E0B]'}`}></div>
+                        <span className="font-space text-[14px] md:text-[16px] tracking-tight text-[#0A0A0A] font-bold">{model.name}</span>
+                      </div>
+                      <div className="col-span-3">
+                        <span className="font-space text-[14px] md:text-[15px] font-medium text-[#6B6B6B]">{model.provider}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <Chip status="default"><span className="font-space font-medium text-[11px] md:text-[12px]">{model.context}</span></Chip>
+                      </div>
+                      <div className="col-span-3 text-right">
+                        <span className="font-space text-[14px] md:text-[15px] font-medium text-[#0A0A0A]">{model.price}</span>
+                      </div>
                     </div>
-                    <div class="ml-4 text-sm text-gray-400 font-mono">Python 示例代码</div>
+                  ))}
                 </div>
-                <div class="p-6 overflow-x-auto">
-                    <pre class="text-sm font-mono leading-relaxed"><span class="text-pink-400">import</span> openai
-
-<span class="text-gray-500"># 1. 配置 Ofoca AI 的接口地址</span>
-openai.api_base = <span class="text-green-400">"https://coding.cnmnmsl.cloud/v1"</span>
-
-<span class="text-gray-500"># 2. 填入在 Ofoca AI 后台生成的令牌 (Token)</span>
-openai.api_key = <span class="text-green-400">"sk-YourOfocaApiKeyHere..."</span>
-
-response = openai.ChatCompletion.create(
-    model=<span class="text-green-400">"gpt-4o"</span>,
-    messages=[
-        {<span class="text-green-400">"role"</span>: <span class="text-green-400">"user"</span>, <span class="text-green-400">"content"</span>: <span class="text-green-400">"你好，Ofoca AI！"</span>}
-    ]
-)
-
-<span class="text-pink-400">print</span>(response.choices[<span class="text-yellow-300">0</span>].message.content)</pre>
-                </div>
+              </div>
             </div>
-        </div>
+          </Card>
+        </RevealOnScroll>
+      </div>
     </section>
+  );
+};
 
-    <footer class="bg-gray-950 border-t border-gray-900 py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col items-center">
-                <div class="flex items-center gap-2 mb-4">
-                    <i class="fa-solid fa-cube text-blue-400 text-xl"></i>
-                    <span class="font-bold text-lg">Ofoca AI</span>
-                </div>
-                <div class="text-sm text-gray-500">
-                    &copy; 2026 Ofoca AI. All rights reserved. Powered by New API.
-                </div>
+const Footer = () => {
+  return (
+    <footer className="bg-[#FFFFFF] border-t border-[#E8E8EC] py-[48px] md:py-[64px]">
+      <div className="max-w-[1280px] mx-auto px-[24px] flex flex-col items-center text-center">
+        <a href="#" className="font-display font-bold text-[24px] tracking-tight text-[#0A0A0A] mb-[16px] inline-block no-underline">
+            <span className="text-[#8B5CF6]">Ofoca AI</span>
+        </a>
+        <p className="text-[13px] md:text-[14px] text-[#6B6B6B] leading-relaxed max-w-[500px] mb-[40px] px-[12px] md:px-0">
+          API 路由领域的编辑级标准。在不妥协安全与稳定性的前提下，全速推动您的产品构建。
+        </p>
+        
+        <div className="flex flex-col md:flex-row items-center justify-between w-full pt-[32px] border-t border-[#E8E8EC] gap-[16px] md:gap-0">
+          <p className="text-[13px] text-[#9C9C9C]">© 2026 Ofoca AI. 保留所有权利。</p>
+          <div className="flex items-center gap-[16px]">
+            <div className="flex items-center gap-2">
+               <div className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></div>
+               <span className="text-[13px] font-medium text-[#6B6B6B]">全部系统运行正常</span>
             </div>
+          </div>
         </div>
+      </div>
     </footer>
+  );
+};
 
-</body>
-</html>
+export default function App() {
+  return (
+    <div className="relative min-h-screen">
+      <StyleInjector />
+      <main>
+        <Hero />
+        <CodeIntegration />
+        <Features />
+        <ModelsList />
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+
+```
